@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#111827" />
     <title>Chess Game</title>
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -16,15 +17,8 @@
             <p id="status" aria-live="polite">White to move</p>
           </div>
           <div class="settings" aria-label="Game settings">
-            <label for="difficulty">Computer difficulty</label>
-            <select id="difficulty">
-              <option value="easy">Easy</option>
-              <option value="medium" selected>Medium</option>
-              <option value="hard">Hard</option>
-            </select>
             <label class="sound-setting"><input id="sound-enabled" type="checkbox" checked /> Sound</label>
           </div>
-          <p class="instructions">You play White. Select a piece or drag it to a highlighted square.</p>
           <div id="board" class="board" role="grid" aria-label="Chess board"></div>
         </div>
         <aside class="history-panel" aria-labelledby="history-title">
