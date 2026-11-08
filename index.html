@@ -9,12 +9,30 @@
   <body>
     <main class="app">
       <h1>Chess Game</h1>
-      <div class="toolbar">
-        <button id="new-game" type="button">New Game</button>
-        <p id="status" aria-live="polite">White to move</p>
-      </div>
-      <p class="instructions">Select a piece or drag it to a highlighted square.</p>
-      <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+      <section class="game-layout" aria-label="Chess game">
+        <div class="play-area">
+          <div class="toolbar">
+            <button id="new-game" type="button">New Game</button>
+            <p id="status" aria-live="polite">White to move</p>
+          </div>
+          <div class="settings" aria-label="Game settings">
+            <label for="difficulty">Computer difficulty</label>
+            <select id="difficulty">
+              <option value="easy">Easy</option>
+              <option value="medium" selected>Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+            <label class="sound-setting"><input id="sound-enabled" type="checkbox" checked /> Sound</label>
+          </div>
+          <p class="instructions">You play White. Select a piece or drag it to a highlighted square.</p>
+          <div id="board" class="board" role="grid" aria-label="Chess board"></div>
+        </div>
+        <aside class="history-panel" aria-labelledby="history-title">
+          <h2 id="history-title">Moves</h2>
+          <ol id="move-history" class="move-history" aria-live="polite"></ol>
+          <button id="download-pgn" class="secondary-button" type="button">Download PGN</button>
+        </aside>
+      </section>
     </main>
 
     <dialog id="promotion-dialog" aria-labelledby="promotion-title">
@@ -26,5 +44,6 @@
     </dialog>
 
     <script src="script.js"></script>
+    <script src="extras.js"></script>
   </body>
 </html>
