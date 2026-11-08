@@ -13,8 +13,17 @@
         <button id="new-game" type="button">New Game</button>
         <p id="status" aria-live="polite">White to move</p>
       </div>
-      <div id="board" class="board" aria-label="Chess board"></div>
+      <p class="instructions">Select a piece or drag it to a highlighted square.</p>
+      <div id="board" class="board" role="grid" aria-label="Chess board"></div>
     </main>
+
+    <dialog id="promotion-dialog" aria-labelledby="promotion-title">
+      <form method="dialog" class="promotion-content">
+        <h2 id="promotion-title">Promote your pawn</h2>
+        <p>Choose a piece:</p>
+        <div id="promotion-choices" class="promotion-choices"></div>
+      </form>
+    </dialog>
 
     <script src="script.js"></script>
   </body>
