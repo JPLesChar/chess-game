@@ -1,10 +1,6 @@
 const historyElement = document.getElementById('move-history');
 const soundEnabledElement = document.getElementById('sound-enabled');
 const downloadPgnButton = document.getElementById('download-pgn');
-const baseResetGame = resetGame;
-const baseFinishMove = finishMove;
-const baseUpdateStatus = updateStatus;
-
 let recordedMoves = [];
 
 function renderMoveHistory() {
@@ -25,13 +21,12 @@ function renderMoveHistory() {
   historyElement.scrollTop = historyElement.scrollHeight;
 }
 
-function getSanBeforeMove(fromX, fromY, move) {
+function getSanBeforeMove(fromX, fromY, move, promotionType) {
   const piece = getPiece(fromX, fromY);
   const destination = getPiece(move.x, move.y);
   if (move.castle) return move.castle === 'kingSide' ? 'O-O' : 'O-O-O';
   const capture = Boolean(destination) || Boolean(move.enPassant);
   let san = piece.type === 'p' ? '' : piece.type.toUpperCase();
-
   if (piece.type !== 'p') {
     const competitors = getAllLegalMoves(currentTurn).filter((candidate) =>
       (candidate.fromX !== fromX || candidate.fromY !== fromY)
@@ -48,37 +43,32 @@ function getSanBeforeMove(fromX, fromY, move) {
   } else if (capture) {
     san += String.fromCharCode(97 + fromX);
   }
-
   if (capture) san += 'x';
   san += `${String.fromCharCode(97 + move.x)}${8 - move.y}`;
-  if (piece.type === 'p' && (move.y === 0 || move.y === 7)) san += '=Q';
+  if (piece.type === 'p' && (move.y === 0 || move.y === 7)) san += `=${promotionType.toUpperCase()}`;
   return san;
 }
 
-function resetGame() {
+window.createChessMoveRecord = (fromX, fromY, move, promotionType) => ({
+  color: currentTurn,
+  san: getSanBeforeMove(fromX, fromY, move, promotionType)
+});
+
+window.onChessReset = () => {
   recordedMoves = [];
-  baseResetGame();
   renderMoveHistory();
-}
+};
 
-function updateStatus() {
-  baseUpdateStatus();
+window.onChessMoveFinished = (moveRecord, details) => {
+  if (moveRecord) {
+    const suffix = gameOver && statusElement.textContent.includes('Checkmate')
+      ? '#'
+      : (isKingInCheck(currentTurn) ? '+' : '');
+    recordedMoves.push({ ...moveRecord, san: `${moveRecord.san}${suffix}` });
+  }
   renderMoveHistory();
-}
-
-function finishMove(fromX, fromY, move, promotionType = 'q') {
-  const capturedPiece = move.enPassant ? getPiece(move.x, fromY) : getPiece(move.x, move.y);
-  const san = getSanBeforeMove(fromX, fromY, move).replace(/=Q$/, `=${promotionType.toUpperCase()}`);
-  const color = currentTurn;
-  baseFinishMove(fromX, fromY, move, promotionType);
-
-  const suffix = gameOver && statusElement.textContent.includes('Checkmate')
-    ? '#'
-    : (isKingInCheck(currentTurn) ? '+' : '');
-  recordedMoves.push({ color, san: `${san}${suffix}` });
-  renderMoveHistory();
-  playMoveSound(capturedPiece || move.enPassant ? 'capture' : move.castle ? 'castle' : 'move');
-}
+  playMoveSound(details.captured ? 'capture' : details.castle ? 'castle' : 'move');
+};
 
 function playMoveSound(kind) {
   if (!soundEnabledElement.checked) return;

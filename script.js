@@ -1,6 +1,6 @@
 const PIECES = {
   w: { p: '♙', r: '♖', n: '♘', b: '♗', q: '♕', k: '♔' },
-  b: { p: '♟', r: '♜', n: '♞', b: '♗', q: '♛', k: '♚' }
+  b: { p: '♟', r: '♜', n: '♞', b: '♝', q: '♛', k: '♚' }
 };
 const PROMOTION_TYPES = ['q', 'r', 'b', 'n'];
 const boardElement = document.getElementById('board');
@@ -46,6 +46,7 @@ function resetGame() {
   pendingPromotion = null;
   updateStatus();
   renderBoard();
+  window.onChessReset?.();
 }
 
 function inBounds(x, y) {
@@ -77,7 +78,6 @@ function isSquareAttacked(x, y, byColor) {
       if (!piece || piece.color !== byColor) continue;
       const dx = x - col;
       const dy = y - row;
-
       if (piece.type === 'p') {
         const direction = piece.color === 'w' ? -1 : 1;
         if (Math.abs(dx) === 1 && dy === direction) return true;
@@ -136,7 +136,6 @@ function generatePseudoLegalMoves(x, y) {
   const piece = getPiece(x, y);
   if (!piece) return [];
   const moves = [];
-
   if (piece.type === 'p') {
     const direction = piece.color === 'w' ? -1 : 1;
     const startRow = piece.color === 'w' ? 6 : 1;
@@ -192,7 +191,6 @@ function generatePseudoLegalMoves(x, y) {
       }
     }
   }
-
   return moves.filter((move) => isMoveKingSafe(x, y, move, piece));
 }
 
@@ -204,7 +202,6 @@ function isMoveKingSafe(fromX, fromY, move, piece) {
   let rookFromX;
   let rookToX;
   let rookPiece;
-
   board[fromY][fromX] = null;
   if (move.enPassant) board[capturedY][capturedX] = null;
   board[move.y][move.x] = piece;
@@ -309,13 +306,13 @@ function showPromotionPicker(color, onChoose) {
 function finishMove(fromX, fromY, move, promotionType = 'q') {
   const movingPiece = board[fromY][fromX];
   const capturedPiece = move.enPassant ? board[fromY][move.x] : board[move.y][move.x];
+  const moveRecord = window.createChessMoveRecord?.(fromX, fromY, move, promotionType);
   if (movingPiece.type === 'k') {
     castlingRights[movingPiece.color].kingSide = false;
     castlingRights[movingPiece.color].queenSide = false;
   }
   if (movingPiece.type === 'r') updateRookRights(movingPiece.color, fromX, fromY);
   if (capturedPiece?.type === 'r') updateRookRights(capturedPiece.color, move.x, move.enPassant ? fromY : move.y);
-
   board[fromY][fromX] = null;
   if (move.enPassant) board[fromY][move.x] = null;
   board[move.y][move.x] = movingPiece;
@@ -331,12 +328,12 @@ function finishMove(fromX, fromY, move, promotionType = 'q') {
   enPassantTarget = movingPiece.type === 'p' && Math.abs(move.y - fromY) === 2
     ? { x: fromX, y: (fromY + move.y) / 2 }
     : null;
-
   currentTurn = opponent(currentTurn);
   selectedSquare = null;
   legalMoves = [];
   updateStatus();
   renderBoard();
+  window.onChessMoveFinished?.(moveRecord, { captured: Boolean(capturedPiece) || Boolean(move.enPassant), castle: Boolean(move.castle) });
 }
 
 function updateRookRights(color, x, y) {
@@ -364,7 +361,7 @@ function renderBoard() {
       if (isLegalMove) square.classList.add(getPiece(x, y) || legalMoves.find((move) => move.x === x && move.y === y)?.enPassant ? 'capture' : 'legal');
       if (piece) {
         const pieceElement = document.createElement('span');
-        pieceElement.className = 'piece';
+        pieceElement.className = `piece ${piece.color === 'b' ? 'black-piece' : 'white-piece'}`;
         pieceElement.textContent = PIECES[piece.color][piece.type];
         pieceElement.draggable = !gameOver;
         pieceElement.addEventListener('dragstart', (event) => {
@@ -398,6 +395,5 @@ function renderBoard() {
   }
 }
 
-// Resolve resetGame when clicked so extras.js can clear the move history too.
-newGameButton.addEventListener('click', () => resetGame());
+newGameButton.addEventListener('click', resetGame);
 resetGame();
